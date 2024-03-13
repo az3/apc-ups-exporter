@@ -118,6 +118,9 @@ type Status struct {
 
 		}
 
+		// Header record indicating the STATUS format revision level, the number of records that follow the APC statement, and the number of bytes that follow the record.
+		ApcHeader string // APC
+
 	}
 
 }
@@ -266,6 +269,7 @@ func ParseStatusText( text string ) ( status Status, err error ) {
 				if ( value == "No alarm" ) {
 					status.UPS.AlarmIntervalSeconds = -1
 				} else {
+					// TODO Check documentation: ALARMDEL value can be string. e.g. "Always", "Low Battery" etc.
 					parsedFloat, floatParseError := strconv.ParseFloat( value, 64 )
 					if floatParseError != nil { return Status{}, floatParseError }
 
@@ -356,6 +360,9 @@ func ParseStatusText( text string ) ( status Status, err error ) {
 
 			// "The firmware revision number as reported by the UPS"
 			case "FIRMWARE": status.UPS.FirmwareRevision = value
+
+			// Header record indicating the STATUS format revision level, the number of records that follow the APC statement, and the number of bytes that follow the record.
+			case "APC": status.Daemon.ApcHeader = value
 
 		}
 

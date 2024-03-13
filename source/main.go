@@ -121,10 +121,11 @@ func updateMetrics( nisAddress net.IP, nisPort int ) {
 	fmt.Println( " Fetched status from the Network Information Server." )
 
 	// Update status metric
+	metricStatus.Reset()
 	switch status.UPS.StatusText {
-		case "ONLINE": metricStatus.Set( 1 )
-		case "ONBATT": metricStatus.Set( 2 )
-		default: metricStatus.Set( -1 )
+		case "ONLINE": metricStatus.WithLabelValues("ONLINE").Set( 1 )
+		case "ONBATT": metricStatus.WithLabelValues("ONBATT").Set( 2 )
+		default: metricStatus.WithLabelValues("UNKNOWN1").Set( -1 )
 	}
 	fmt.Println( "  Updated the status metric." )
 
@@ -150,6 +151,21 @@ func updateMetrics( nisAddress net.IP, nisPort int ) {
 	metricDaemonTimeoutMinutes.Set( status.Daemon.Configuration.MaximumTimeoutMinutes )
 	metricDaemonTransferCount.Set( status.Daemon.Battery.Transfer.Total )
 	metricDaemonStartTimestamp.Set( float64( status.Daemon.StartupTime.Unix() ) )
+	
+	{
+		metricHostname.Reset()
+		metricHostname.WithLabelValues(status.Daemon.SystemName).Set(float64(1))
+		metricApcHeader.Reset()
+		metricApcHeader.WithLabelValues(status.Daemon.ApcHeader).Set(float64(1))
+		metricAlarmDel.Reset()
+		//if (status.UPS.AlarmIntervalSeconds == -1) {
+		//	metricAlarmDel.WithLabelValues("No alarm").Set(status.UPS.AlarmIntervalSeconds)
+		//} else {
+		//	metricAlarmDel.WithLabelValues("Always").Set(status.UPS.AlarmIntervalSeconds)
+		//}
+
+	}
+
 	fmt.Println( "  Updated the daemon metrics." )
 
 	// Disconnect message for clarity, this is actually done by the defer statement
